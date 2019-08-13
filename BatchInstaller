@@ -28,7 +28,7 @@ if [ "$1" == "" ]; then
 fi
 
 if ! [ -d $1 ]; then
-	zenity --error --text="Invalid Argument" --title="Invalid Arg" --width=300 2>/dev/null
+	zenity --error --text="Invalid Argument/Directory" --title="Invalid Arg" --width=300 2>/dev/null
 	exit 1
 fi
 for i in $directory/* ;
