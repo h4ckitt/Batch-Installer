@@ -1,0 +1,62 @@
+#!/bin/bash
+declare -i err=0
+[ -x `zenity 2>/dev/null` ] || {
+	echo -e "${RED} Error: Zenity is required to run this software \n Please install zenity and run this program again"
+	exit
+}
+for i in /usr/bin/{bc,adb}; do
+	[ -x "$i" ] || {
+		zenity --error --text="<span font=12> Dependency $i is required to run this program."
+		err+=1
+	}
+done
+[ $err -eq 0 ] || exit 1
+directory=$1
+total=0
+check_file(){
+	pass=0
+     filename="${i##*/}"
+     base="${filename%.[^.]*}"
+     ext="${filename:${#base} + 1}"
+	if [ "$ext" == "apk" ]; then
+		pass=1
+	fi
+}
+if [ "$1" == "" ]; then
+	zenity --error --text="No Directory Specified" --title="Invalid Argument" --width=300 2>/dev/null
+	exit 1
+fi
+
+if ! [ -d $1 ]; then
+	zenity --error --text="Invalid Argument" --title="Invalid Arg" --width=300 2>/dev/null
+	exit 1
+fi
+for i in $directory/* ;
+ do
+	check_file $i
+if [ $pass == 1 ]; then
+total=$(($total+1))
+fi
+done
+
+if [ $total == 0 ]; then
+	zenity --error --text="No Apk File Found" --title="Error" --width=300 2>/dev/null
+	exit 1
+fi
+
+(for i in $directory/* ;
+do
+     check_file $i
+if [ $pass == 1 ]; then
+counter=$(($counter+1))
+echo "$(bc -l <<< 'scale=2; '$counter'/'$total' * 100')"
+echo "# Installing $counter  of $total"
+adb install -r "$i"
+fi
+done
+echo "# Done") | zenity --progress \
+	--title="Installing" \
+	--text="Starting Installation" \
+	--percentage=0 \
+	--width=300 \
+	2>/dev/null
